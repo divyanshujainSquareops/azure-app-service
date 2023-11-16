@@ -34,6 +34,11 @@ Azure app have 4 type of app service :-
 7. write "azure-pipeine.yml" file :- for deploy web app with enviourmental variable
 when these steps are complete, your web app ready with backend.
 
+# Create web app with azure devops (for backend)
+1. create static app manually :- choose source->other when you create static app 
+2. create pipeline and integrate with github/azure repo
+3. write yaml file for automation
+4. run pipeline and your changes autmatically deploy on azurestatic service
 # Create static app with azure devops
 1. create static app manually :- choose source->other when you create static app 
 2. create pipeline and integrate with github/azure repo
