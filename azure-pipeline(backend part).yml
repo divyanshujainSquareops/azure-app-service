@@ -1,0 +1,108 @@
+	# Node.js
+# Build a general Node.js project with npm.
+# Add steps that analyze code, save build artifacts, deploy, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/javascript
+
+trigger:
+- main
+
+pool:
+  name: Default
+  vmImage: ubuntu-latest
+
+jobs:
+- job: Build
+  displayName: 'Build Job'
+  steps:
+  - task: NodeTool@0
+    inputs:
+      versionSpec: '16.19.0'
+    displayName: 'Install Node.js'
+
+  - script: |
+      npm install
+      npm run build --if-present
+    displayName: 'npm install and build'
+    
+  - script: |
+      sudo apt-get -y install zip
+    displayName: 'Install zip'
+
+  - task: ArchiveFiles@2
+    inputs:
+      rootFolderOrFile: '$(System.DefaultWorkingDirectory)'
+      includeRootFolder: false
+      archiveType: 'zip'
+      archiveFile: '$(Build.ArtifactStagingDirectory)/app.zip'
+      replaceExistingArchive: true
+    displayName: 'Archive build artifacts'
+
+  - task: PublishBuildArtifacts@1
+    inputs:
+      PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+      ArtifactName: 'drop'
+      publishLocation: 'Container'
+    displayName: 'Publish build artifacts'
+
+- job: Deploy
+  displayName: 'Deploy Job'
+  dependsOn: Build
+  steps:
+  - task: DownloadBuildArtifacts@1
+    inputs:
+      buildType: 'current'
+      downloadType: 'single'
+      artifactName: 'drop'
+      downloadPath: '$(Build.ArtifactStagingDirectory)'
+
+  - task: AzureWebApp@1
+    inputs:
+      azureSubscription: 'Free Trial(46dbdd8a-efee-4055-8cca-74f21476c43e)'
+      appType: 'webAppLinux'
+      appName: 'WepApp-CI-CD-mern-app'
+      package: '$(Build.ArtifactStagingDirectory)/**/*.zip'
+  
+  - task: AzureAppServiceSettings@1
+    inputs:
+      azureSubscription: 'Free Trial(46dbdd8a-efee-4055-8cca-74f21476c43e)'
+      appName: 'WepApp-CI-CD-mern-app'
+      resourceGroupName: 'multi-instance-resource-group'
+      appSettings: |
+        [
+          {
+            "name": "DB_URL",
+            "value": "mongodb+srv://deepujain:Deepu@6387!@cluster0.ziwayyo.mongodb.net/?retryWrites=true&w=majority",
+            "slotSetting": false
+          },
+          {
+            "name": "PORT",
+            "value": "5000",
+            "slotSetting": false
+          },
+          {
+            "name": "SECRET",
+            "value": "12345678",
+            "slotSetting": false
+          },
+          {
+            "name": "SMTP_HOST",
+            "value": "deepujain",
+            "slotSetting": false
+          },
+          {
+            "name": "SMTP_PASS",
+            "value": "",
+            "slotSetting": false
+          },
+          {
+            "name": "SMTP_PORT",
+            "value": "1234",
+            "slotSetting": false
+          },
+          {
+            "name": "SMTP_USER",
+            "value": "deepu",
+            "slotSetting": false
+          }
+        ]
+ 
