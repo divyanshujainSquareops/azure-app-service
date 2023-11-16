@@ -1,0 +1,41 @@
+trigger:
+- fix/Dockerfile
+
+pr:
+- fix/Dockerfile
+
+jobs:
+- job: BuildAndDeploy
+  timeoutInMinutes: 30
+  displayName: 'Build and Deploy Job'
+  pool:
+    name: Default
+    vmImage: 'ubuntu-latest'
+  
+  steps:
+  - checkout: self
+    submodules: true
+
+  - task: UseDotNet@2
+    inputs:
+      packageType: 'sdk'
+      version: '3.x'
+
+  - task: NodeTool@0
+    inputs:
+      versionSpec: '14.x'
+      checkLatest: true
+
+  - script: |
+      npm install --legacy-peer-deps
+      npm install --force
+    displayName: 'Install and Build'
+
+  - task: AzureStaticWebApp@0
+    inputs:
+      app_location: '/' # App source code path
+      api_location: '' # Api source code path - optional
+      output_location: '$(Build.ArtifactStagingDirectory)' # Built app content directory - optional
+      azure_static_web_apps_api_token: $(AZURE_STATIC_WEB_APPS_API_TOKEN_POLITE_TREE_06A1BB010)
+      action: 'upload'
+      endpoint: 'Free Trial(46dbdd8a-efee-4055-8cca-74f21476c43e)' # If you have a service connection for Azure, specify the name here; else, specify manually.
